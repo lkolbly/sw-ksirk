@@ -341,6 +341,7 @@ class Game:
 
     # Generate all possible actions on the given card
     def enumerate_actions(self, card):
+        yield [] # The no-op action
         for action in card:
             if action[0] == 'move':
                 # Falcon and executor move twice, treat them specially
@@ -464,7 +465,10 @@ class Game:
                 bonus += 2
             return bonus
         elif action[0] == 'attack_deathstar':
-            roll = rollDice(sum(action[1]))
+            if action[1].falcon > 0:
+                roll = rollDice(2)
+            else:
+                roll = rollDice(sum(action[1]))
             if 6 in roll:
                 print("The rebellion won the game!")
                 self.has_won = True
@@ -720,14 +724,15 @@ class HeadlessAgentGame:
             card = player.popDownCard()
             s1 = self.game.to_state()
             possible_actions = list(self.game.enumerate_actions(card))
-            if len(possible_actions) > 0:
-                action = agent.pickAction(self.game, possible_actions)
-                bonusCards = self.game.perform_actions(action)
-                if bonusCards is None:
-                    bonusCards = 0
-                if bonusCards > 0:
-                    player.getBonusCards(bonusCards)
-                agent.feedback(Game(s1), card, action, self.game, bonusCards)
+
+            # Now pick an action and execute it
+            action = agent.pickAction(self.game, possible_actions)
+            bonusCards = self.game.perform_actions(action)
+            if bonusCards is None:
+                bonusCards = 0
+            if bonusCards > 0:
+                player.getBonusCards(bonusCards)
+            agent.feedback(Game(s1), card, action, self.game, bonusCards)
             self.num_turns += 1
 
         # Give feedback on the whole round
@@ -775,6 +780,46 @@ def testAgents(rebelAgent, empireAgent, ntests=100):
         nturns_history.append(nturns)
 
     return winners, statistics.median(nturns_history)
+
+def simulateShieldRolls(stormtroopers=False):
+    rolls = list(SHIELD_ROLLS)
+    if stormtroopers:
+        for i in range(len(rolls)):
+            rolls[i] += 1
+    cnt = 0
+    #print(rolls, len(rolls))
+    while len(rolls) > 0:
+        cnt += 1
+        roll = rollDice(5)
+        roll.sort()
+        #print(roll)
+
+        while len(rolls) > 0:
+            torm = -1
+            nextval = rolls[0]
+            for r in roll:
+                if r >= nextval:
+                    torm = r
+            if torm >= 0:
+                roll.remove(torm)
+                rolls = rolls[1:]
+            else:
+                break
+        #print(rolls, len(rolls))
+        pass
+    return cnt
+
+def findExpectedShieldRolls(N=1000):
+    cnts = []
+    for i in range(N):
+        cnts.append(simulateShieldRolls(False))
+    print(sum(cnts)/float(N))
+
+    cnts = []
+    for i in range(N):
+        cnts.append(simulateShieldRolls(True))
+    print(sum(cnts)/float(N))
+    pass
 
 if __name__ == "__main__":
     winners, medianTurns = testAgents(ShieldAgent(), AttackAgent())
