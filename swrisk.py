@@ -781,10 +781,10 @@ def testAgents(rebelAgent, empireAgent, ntests=100):
 
     return winners, statistics.median(nturns_history)
 
-def simulateShieldRolls(stormtroopers=False):
+def simulateShieldRolls(stormtroopers=100):
     rolls = list(SHIELD_ROLLS)
     if stormtroopers:
-        for i in range(len(rolls)):
+        for i in range(len(rolls)-stormtroopers, len(rolls)):
             rolls[i] += 1
     cnt = 0
     #print(rolls, len(rolls))
@@ -810,15 +810,12 @@ def simulateShieldRolls(stormtroopers=False):
     return cnt
 
 def findExpectedShieldRolls(N=1000):
-    cnts = []
-    for i in range(N):
-        cnts.append(simulateShieldRolls(False))
-    print(sum(cnts)/float(N))
-
-    cnts = []
-    for i in range(N):
-        cnts.append(simulateShieldRolls(True))
-    print(sum(cnts)/float(N))
+    print("stormtroopers,average")
+    for i in range(len(SHIELD_ROLLS)):
+        cnts = []
+        for j in range(N):
+            cnts.append(simulateShieldRolls(i))
+        print("%d,%s"%(i, sum(cnts)/float(N)))
     pass
 
 if __name__ == "__main__":
