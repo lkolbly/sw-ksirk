@@ -287,7 +287,7 @@ class Game:
 
         self.lightsaberPosition = {
             "empire": 13,
-            "rebel": 11
+            "rebel": 12
         }
 
         self.shieldRolls = list(SHIELD_ROLLS)
